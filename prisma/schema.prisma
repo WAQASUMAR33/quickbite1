@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String
+  phone     String?
+  city      String
+  address   String  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  orders    Order[]
+}
+
+enum RestaurantStatus {
+  ACTIVE
+  DE_ACTIVE
+}
+
+model Restaurant {
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String       @unique
+  password      String
+  city          String?      @default("")
+  address       String
+  phone         String
+  cousine       String?      @default("")
+  description   String?      @default("")
+  logo          String?      @default("")
+  bgImage       String?      @default("")
+  latitude      Decimal      @db.Decimal(10, 8)
+  longitude     Decimal      @db.Decimal(11, 8)
+  ranking       Float?       @default(0.0)
+  status        RestaurantStatus @default(DE_ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  tables        Table[]
+  parkingSlots  ParkingSlot[]
+  categories    Category[]
+  orders        Order[]
+}
+
+model Table {
+  id            Int          @id @default(autoincrement())
+  restaurantId  Int
+  restaurant    Restaurant   @relation(fields: [restaurantId], references: [id])
+  tableNumber   String
+  capacity      Int
+  status        TableStatus  @default(AVAILABLE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Admin {
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  password      String
+  name          String
+  role          String       @default("Admin")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model ParkingSlot {
+  id            Int          @id @default(autoincrement())
+  restaurantId  Int
+  restaurant    Restaurant   @relation(fields: [restaurantId], references: [id])
+  slotNumber    String
+  status        ParkingStatus @default(AVAILABLE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Category {
+  id            Int          @id @default(autoincrement())
+  restaurantId  Int
+  restaurant    Restaurant   @relation(fields: [restaurantId], references: [id])
+  name          String
+  imgurl        String       @default("") // Default to empty string
+  dishes        Dish[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Dish {
+  id            Int          @id @default(autoincrement())
+  categoryId    Int
+  category      Category     @relation(fields: [categoryId], references: [id])
+  name  String
+  imgurl        String       @default("")
+  description   String?      @default("")
+  price         Float        @default(0.0)
+  available     Boolean      @default(true)
+  orderItems    OrderItem[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+
+
+
+model Order {
+  id            Int          @id @default(autoincrement())
+  userId        Int
+  user          User         @relation(fields: [userId], references: [id])
+  restaurantId  Int
+  restaurant    Restaurant   @relation(fields: [restaurantId], references: [id])
+  orderItems    OrderItem[]
+  totalAmount   Float
+  order_date    String?      @default("")
+  order_time    String?      @default("")
+  contact_info  String?      @default("")
+  order_type    String?      @default("")
+  table_no      String?      @default("")
+  trnx_id       String?      @default("")
+  trnx_receipt  String?      @default("")
+  status        OrderStatus  @default(PENDING)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+ 
+}
+
+model OrderItem {
+  id            Int          @id @default(autoincrement())
+  orderId       Int
+  order         Order        @relation(fields: [orderId], references: [id])
+  dishId        Int
+  dish          Dish         @relation(fields: [dishId], references: [id])
+  unit_rate     Float        @default(0)
+  quantity      Int
+  price         Float
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+}
+
+enum ParkingStatus {
+  AVAILABLE
+  OCCUPIED
+}
+
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  DELIVERED
+  CANCELLED
+}
+
